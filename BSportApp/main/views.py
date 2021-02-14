@@ -32,29 +32,20 @@ class DynamoDB(View):
     def get(self, request, *args, **kwargs):
         table = dynamodb.Table('Appointments')
         fields = "appointment_date, description, user_FK"
-        # Expression Attribute Names for Projection Expression only.
-        # http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ReservedWords.html
-        esk = None
-
         response = table.scan(
             ProjectionExpression=fields,
             )
-
-        for i in response['Items']:
-            print(json.dumps(i, cls=DecimalEncoder))
-            # or do something else, like items.append(i)
 
         while 'LastEvaluatedKey' in response:
             response = table.scan(
                 ProjectionExpression=pe,
                 ExclusiveStartKey=response['LastEvaluatedKey']
             )
-
+        responseList = []
         for i in response['Items']:
-            print(json.dumps(i, cls=DecimalEncoder))
-            # or do something else, like items.append(i)
-            validated_response=(json.dumps(i, cls=DecimalEncoder))
-            return JsonResponse(validated_response, safe=False)
+            responseList.append(json.dumps(i, cls=DecimalEncoder))
+
+        return JsonResponse(responseList, safe=False)
 
 
 class UserProfileView(viewsets.ModelViewSet):

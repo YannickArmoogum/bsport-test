@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from . import models
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete,pre_delete
 from datetime import datetime
 from rest_framework.serializers import(
     CharField,
@@ -48,7 +48,7 @@ class AppointmentSerializer(serializers.HyperlinkedModelSerializer):
         instance.description = validated_data.get('description', instance.description)
         instance.user_FK = validated_data.get('user_FK', instance.user_FK)
         instance.save()
-        print("user_FK",instance.user_FK.id)
+        #print("user_FK",instance.user_FK.id)
         table.update_item(
             Key={
                 'id': instance.id,
@@ -65,20 +65,19 @@ class AppointmentSerializer(serializers.HyperlinkedModelSerializer):
 
         return instance
 
-    @receiver(post_delete)
+    @receiver(pre_delete)
     def delete_obj(sender, instance, **kwargs):
-        try:
-            response = table.delete_item(
-                Key={
-                    'id': instance.id,
-                    'user_FK': instance.user_FK.id
-                }
-            )
-        except ClientError as e:
-            if e.response['Error']['Code'] == "ConditionalCheckFailedException":
-                print(e.response['Error']['Message'])
-            else:
-                raise
+        print('here delete')
+        print(instance.id,'instance id')
+        print(instance.user_FK.id,'instance fk')
+        table.delete_item(
+            Key={
+                'id': instance.id,
+                'user_FK': instance.user_FK.id
+            }
+        )
+
+
 
 
 
