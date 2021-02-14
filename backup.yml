@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -optimizeDbBeforeStartup -dbPath ./data"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+  web:
+    restart: always
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "dynamodb-local"
+    links:
+      - "dynamodb-local"
+    environment:
+      AWS_ACCESS_KEY_ID: "AKIAUYYZNBRKCWSN4OEL"
+      AWS_SECRET_ACCESS_KEY: "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"
+      REGION: "eu-west-1"
+    volumes:
+      - ./BSportApp:/usr/src/app
+    command: /usr/local/bin/gunicorn BSportApp.wsgi:application -w 2 -b :8080
